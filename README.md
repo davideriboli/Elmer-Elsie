@@ -7,6 +7,10 @@ In 1948 and 1949, at the Burden Neurological Institute in Bristol, neurologist a
 
 Unlike modern programmable robots, Elmer and Elsie had no microprocessor or memory. Their "brains" consisted of purely analogue electronics: two vacuum tubes, a photoelectric cell (sensor for light), and a contact switch (sensor for touch). Despite this extreme simplicity, the continuous interaction between their sensors, their driving/steering motors, and the environment generated complex, emergent behaviors. They exhibited phototaxis (seeking light), obstacle avoidance, and a resting state when the light was adequately bright.
 
+<img width="400" height="489" alt="GreyWalterBlocks" src="https://github.com/user-attachments/assets/772f1b80-0891-4806-af1b-e220fdc2d80e" />
+
+*William Grey Walter watching one of the two original “turtles”<br>as it dodges obstacles on its way home, drawn by the light source inside*.
+
 ### The Mirror Experiment
 Walter made a groundbreaking observation when he placed a light on the shell of a turtle and allowed it to look into a mirror. The robot's phototropic circuitry reacted to its own reflection, creating a positive feedback loop. The conflicting signals caused the machine to flicker and tremble—a state Walter likened to a rudimentary form of self-recognition and organic hesitation.
 
