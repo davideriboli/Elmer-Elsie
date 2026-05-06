@@ -112,7 +112,7 @@ const FRZ_MIR=65, FRZ_TUR=86;
 // ── STATE ────────────────────────────────────────────────────
 const cv=document.getElementById('c'), cx=cv.getContext('2d');
 let W,H,fr=0,running=false,seeded=false,drag=null;
-let light={x:0,y:0,intensity:60};
+let light={x:0,y:0,nx:0,ny:0,intensity:60};
 let turtles=[], obstacles=[], logs=[];
 const AR={l:0,r:0,t:0,b:0}; 
 let AX=0,AY=0;               
@@ -136,33 +136,54 @@ function compAR(){
 }
 
 // ── INIT ─────────────────────────────────────────────────────
-function mkT(id,name,hx,hy){
-  return{id,name,x:hx,y:hy,hx,hy,angle:-Math.PI/2,scan:0,
+function mkT(id,name,nx,ny){
+  return{id,name,nx,ny,x:0,y:0,hx:0,hy:0,angle:-Math.PI/2,scan:0,
     nA:0,nB:0,state:'idle',trail:[],
     avT:0,avPh:null,avDir:1,avAmt:0,avCl:0,fTick:0,returning:false};
 }
-function mkO(id,x,y,w,angle,type='obstacle'){
-  return{id,x,y,w,h:11,angle,type,active:type!=='mirror'};
+function mkO(id,nx,ny,w,angle,type='obstacle'){
+  return{id,nx,ny,x:0,y:0,w,h:11,angle,type,active:type!=='mirror'};
+}
+
+function updatePositionsFromNormalized(){
+  const aw = AR.r - AR.l, ah = AR.b - AR.t;
+  light.x = AR.l + aw * light.nx;
+  light.y = AR.t + ah * light.ny;
+  obstacles.forEach(o => {
+    o.x = AR.l + aw * o.nx;
+    o.y = AR.t + ah * o.ny;
+  });
+  turtles.forEach(t => {
+    t.hx = AR.l + aw * t.nx;
+    t.hy = AR.t + ah * t.ny;
+    if(!running && t.state === 'idle'){
+      t.x = t.hx; t.y = t.hy;
+    } else {
+      // Clamp position safely within the arena if window shrinks rapidly
+      t.x = Math.max(AR.l+TR, Math.min(AR.r-TR, t.x));
+      t.y = Math.max(AR.t+TR, Math.min(AR.b-TR, t.y));
+    }
+  });
 }
 
 function setup(){
   W=cv.width=window.innerWidth; H=cv.height=window.innerHeight;
   if(seeded)return;
   compAR();
-  const aw=AR.r-AR.l, ah=AR.b-AR.t;
-  light={x:AX, y:AR.t+ah*.28, intensity:60};
+  light={intensity:60, nx:0.5, ny:0.28, x:0, y:0};
   turtles=[
-    mkT(0,'Elmer', AR.l+aw*.38, AR.t+ah*.78),
-    mkT(1,'Elsie', AR.l+aw*.62, AR.t+ah*.78),
+    mkT(0,'Elmer', 0.38, 0.78),
+    mkT(1,'Elsie', 0.62, 0.78),
   ];
   obstacles=[
-    mkO(0, AR.l+aw*.28, AR.t+ah*.52, 115, 0),
-    mkO(1, AR.l+aw*.72, AR.t+ah*.52,  92, Math.PI/2),
-    mkO(2, AX,          AR.t+ah*.65, 132, Math.PI/10),
-    mkO(3, AR.l+aw*.18, AR.t+ah*.42,  82, -Math.PI/5),
-    mkO(4, AR.l+aw*.82, AR.t+ah*.42, 102, Math.PI/6),
-    mkO(5, AX, AY, 92, 0, 'mirror'),
+    mkO(0, 0.28, 0.52, 115, 0),
+    mkO(1, 0.72, 0.52,  92, Math.PI/2),
+    mkO(2, 0.50, 0.65, 132, Math.PI/10),
+    mkO(3, 0.18, 0.42,  82, -Math.PI/5),
+    mkO(4, 0.82, 0.42, 102, Math.PI/6),
+    mkO(5, 0.50, 0.50,  92, 0, 'mirror'),
   ];
+  updatePositionsFromNormalized();
   seeded=true;
 }
 
@@ -191,16 +212,16 @@ function mirFB(t,mo){
   return Math.min(1,(t.nA*.92+light.intensity/100*.48)*prox*face*scn);
 }
 
+// Ottimizzazione calcolo collisioni
 function checkFrozen(t){
   if(!running||t.returning||t.state==='resting'||t.state==='frozen')return false;
   const mo=obstacles.find(o=>o.type==='mirror'&&o.active);
-  if(mo&&dst(t.x,t.y,mo.x,mo.y)<FRZ_MIR){
+  if(mo&&dst2(t.x,t.y,mo.x,mo.y)<FRZ_MIR**2){
     if(Math.abs(adiff(t.angle,Math.atan2(mo.y-t.y,mo.x-t.x)))<Math.PI/2.3)return true;
   }
   for(const o of turtles){
     if(o.id===t.id)continue;
-    const dd=dst(t.x,t.y,o.x,o.y);
-    if(dd<FRZ_TUR){
+    if(dst2(t.x,t.y,o.x,o.y)<FRZ_TUR**2){
       const aToO=Math.atan2(o.y-t.y,o.x-t.x);
       const aFrO=Math.atan2(t.y-o.y,t.x-o.x);
       if(Math.abs(adiff(t.angle,aToO))<Math.PI/2.6&&
@@ -583,8 +604,15 @@ cv.addEventListener('mousemove',e=>{
     if(drag.type==='L'){
       light.x=Math.max(AR.l+6,Math.min(AR.r-6,p.x+drag.ox));
       light.y=Math.max(AR.t+6,Math.min(AR.b-6,p.y+drag.oy));
+      light.nx = (light.x - AR.l) / (AR.r - AR.l);
+      light.ny = (light.y - AR.t) / (AR.b - AR.t);
     }
-    if(drag.type==='M'){drag.o.x=p.x+drag.ox;drag.o.y=p.y+drag.oy;}
+    if(drag.type==='M'){
+      drag.o.x=p.x+drag.ox;
+      drag.o.y=p.y+drag.oy;
+      drag.o.nx = (drag.o.x - AR.l) / (AR.r - AR.l);
+      drag.o.ny = (drag.o.y - AR.t) / (AR.b - AR.t);
+    }
     if(drag.type==='R'){drag.o.angle=Math.atan2(p.y-drag.o.y,p.x-drag.o.x);}
     if(drag.type==='T'){
       drag.t.x=Math.max(AR.l+TR,Math.min(AR.r-TR,p.x+drag.ox));
@@ -642,7 +670,9 @@ document.getElementById('btn-mir').addEventListener('click',()=>{
   mo.active=!mo.active;
   const b=document.getElementById('btn-mir');
   if(mo.active){
-    mo.x=AX;mo.y=AY;mo.angle=0;
+    mo.x=AX;mo.y=AY;
+    mo.nx=0.5;mo.ny=0.5;
+    mo.angle=0;
     b.textContent='⊹  Remove Mirror';b.classList.add('on');
     emit('Mirror placed — move it near a turtle');
   }else{
@@ -663,10 +693,7 @@ window.addEventListener('resize',()=>{
   W=cv.width=window.innerWidth; H=cv.height=window.innerHeight;
   compAR();
   if(seeded){
-    const aw=AR.r-AR.l, ah=AR.b-AR.t;
-    turtles[0].hx=AR.l+aw*.38; turtles[0].hy=AR.t+ah*.78;
-    turtles[1].hx=AR.l+aw*.62; turtles[1].hy=AR.t+ah*.78;
-    turtles.forEach(t=>{if(t.state==='idle'){t.x=t.hx;t.y=t.hy;}});
+    updatePositionsFromNormalized();
   }
 });
 
