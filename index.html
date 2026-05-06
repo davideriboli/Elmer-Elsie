@@ -2,129 +2,207 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>Elmer &amp; Elsie — W. Grey Walter, 1948</title>
 <style>
 :root{
-  --bg:#0d0a07;--panel:rgba(15,11,6,.93);--border:rgba(155,110,40,.3);
+  --bg:#0d0a07;--panel:rgba(13,10,6,.97);--border:rgba(155,110,40,.28);
   --text:#f0e4ca;--dim:#b09868;--amber:#d09438;--font:'Courier New',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
-canvas{position:fixed;top:0;left:0;width:100%;height:100%}
-.panel{
-  position:fixed;background:var(--panel);border:1px solid var(--border);
-  border-radius:5px;padding:18px 18px 16px;backdrop-filter:blur(14px);
-  font-family:var(--font);color:var(--text);z-index:10;
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+
+#ham{
+  position:fixed;top:14px;left:14px;z-index:200;width:44px;height:44px;
+  border-radius:5px;background:rgba(13,10,6,.88);border:1px solid var(--border);
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;transition:background .2s;
+  -webkit-tap-highlight-color:transparent;
 }
-#ctrl{top:20px;left:20px;width:268px}
-#dash{top:20px;right:20px;width:238px}
-h1{font-size:1.05rem;letter-spacing:3px;text-transform:uppercase;color:#f8f0e0;margin-bottom:2px}
-.sub{font-size:.63rem;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-bottom:16px}
-h2{font-size:.77rem;letter-spacing:2px;text-transform:uppercase;color:var(--amber);
-   border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:13px}
+#ham:hover{background:rgba(155,110,40,.2)}
+#ham .bar{width:18px;height:1.5px;background:var(--amber);border-radius:1px;transition:all .28s ease}
+#ham.open .bar:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+#ham.open .bar:nth-child(2){opacity:0;transform:scaleX(0)}
+#ham.open .bar:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+#ov{
+  position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .28s;
+}
+#ov.show{opacity:1;pointer-events:all}
+
+#drawer{
+  position:fixed;top:0;left:0;height:100%;width:min(318px,90vw);z-index:160;
+  background:var(--panel);border-right:1px solid var(--border);
+  transform:translateX(-100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#drawer.open{transform:translateX(0)}
+#dhead{padding:18px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+#dbody{
+  flex:1;overflow-y:auto;padding:16px 18px 36px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+#dbody::-webkit-scrollbar{width:4px}
+#dbody::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+h1{font-family:var(--font);font-size:1.06rem;letter-spacing:3px;text-transform:uppercase;color:#f8f0e0;margin-bottom:2px}
+.sub{font-family:var(--font);font-size:.63rem;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase}
+h2{font-family:var(--font);font-size:.78rem;letter-spacing:2px;text-transform:uppercase;
+   color:var(--amber);border-bottom:1px solid var(--border);padding-bottom:5px;margin:18px 0 13px}
 hr{border:none;border-top:1px solid var(--border);margin:13px 0}
 .row{margin-bottom:12px}
-.lbl{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:5px}
-.hint{display:block;font-size:.75rem;color:var(--dim);line-height:1.42;margin-bottom:7px}
-input[type=range]{width:100%;accent-color:var(--amber)}
-button{
-  width:100%;padding:9px;margin-bottom:8px;
-  background:rgba(155,110,40,.1);border:1px solid var(--border);
-  color:var(--text);font-family:var(--font);font-size:.83rem;
-  letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+.lbl{display:flex;justify-content:space-between;font-family:var(--font);font-size:.86rem;color:var(--text);margin-bottom:5px}
+.hint{display:block;font-family:var(--font);font-size:.76rem;color:var(--dim);line-height:1.45;margin-bottom:8px}
+
+.btn{
+  width:100%;padding:10px;margin-bottom:8px;background:rgba(155,110,40,.1);
+  border:1px solid var(--border);color:var(--text);font-family:var(--font);
+  font-size:.84rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
   border-radius:3px;transition:background .2s,border-color .2s;
+  -webkit-tap-highlight-color:transparent;
 }
-button:hover{background:rgba(155,110,40,.27);border-color:var(--amber)}
-button.on{background:rgba(155,110,40,.32);border-color:var(--amber);color:#dcaa48}
+.btn:hover,.btn:active{background:rgba(155,110,40,.28);border-color:var(--amber)}
+.btn.on{background:rgba(155,110,40,.32);border-color:var(--amber);color:#dcaa48}
 #btn-mir{background:rgba(130,175,200,.07);border-color:rgba(130,175,200,.22);color:#b0cad8}
-#btn-mir:hover{background:rgba(130,175,200,.2);border-color:#9ac0e0}
+#btn-mir:hover,#btn-mir:active{background:rgba(130,175,200,.2);border-color:#9ac0e0}
 #btn-mir.on{background:rgba(130,175,200,.24);border-color:#9ac0e0;color:#bcd8f0}
 #btn-trails{background:rgba(180,120,50,.07);border-color:rgba(180,120,50,.22);color:#d0b080}
-#btn-trails:hover{background:rgba(180,120,50,.2);border-color:#dca050}
+#btn-trails:hover,#btn-trails:active{background:rgba(180,120,50,.2);border-color:#dca050}
 #btn-trails.on{background:rgba(180,120,50,.24);border-color:#e0a858;color:#f0d0a0}
+#btn-clear,#btn-png{font-size:.74rem;padding:8px;color:#9a8050;letter-spacing:1.5px}
+input[type=range]{width:100%;accent-color:var(--amber);cursor:pointer}
+
 .tblock{margin-bottom:14px}
-.tname{font-size:.86rem;color:var(--amber);letter-spacing:1px;margin-bottom:5px}
+.tname{font-family:var(--font);font-size:.87rem;color:var(--amber);letter-spacing:1px;margin-bottom:5px}
 .badge{
-  display:inline-block;font-size:.67rem;padding:2px 7px;
-  border-radius:2px;border:1px solid currentColor;
-  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;transition:color .3s
+  display:inline-block;font-family:var(--font);font-size:.67rem;padding:2px 7px;
+  border-radius:2px;border:1px solid currentColor;text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:8px;transition:color .3s;
 }
-.s-idle{color:#514839}       .s-scanning{color:#7e8f5e}
-.s-seeking{color:#b89840}    .s-hesitating{color:#d07828}
-.s-avoiding{color:#c04030}   .s-frozen{color:#88b8d4}
-.s-resting{color:#c8a838}
-.nrow{display:flex;align-items:center;gap:8px;font-size:.77rem;margin-bottom:5px}
+.s-idle{color:#514839}.s-scanning{color:#7e8f5e}.s-seeking{color:#b89840}
+.s-hesitating{color:#d07828}.s-avoiding{color:#c04030}.s-frozen{color:#88b8d4}.s-resting{color:#c8a838}
+.nrow{display:flex;align-items:center;gap:8px;font-family:var(--font);font-size:.78rem;color:var(--text);margin-bottom:6px}
 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:background .15s,box-shadow .15s}
-.dot.A{background:#3e2808}    .dot.A.lit{background:#e09c2c;box-shadow:0 0 7px #e09c2c}
-.dot.B{background:#3e0e08}    .dot.B.lit{background:#d83828;box-shadow:0 0 7px #d83828}
-.nval{color:var(--dim);min-width:32px;text-align:right;font-size:.77rem}
-#log{font-size:.72rem;color:var(--dim);margin-top:10px;
-     padding-top:10px;border-top:1px solid var(--border);line-height:1.9}
+.dot.A{background:#3e2808}.dot.A.lit{background:#e09c2c;box-shadow:0 0 7px #e09c2c}
+.dot.B{background:#3e0e08}.dot.B.lit{background:#d83828;box-shadow:0 0 7px #d83828}
+.nval{color:var(--dim);min-width:32px;text-align:right;font-size:.78rem}
+#log{font-family:var(--font);font-size:.73rem;color:var(--dim);
+     margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.9}
 .le{transition:opacity 2s}.le.old{opacity:.3}
+#about-txt{font-family:var(--font);font-size:.79rem;line-height:1.74;color:#c4ae82}
+#about-txt strong{color:var(--amber)}
+#about-txt em{color:#d8c898;font-style:italic}
+
+#fab{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:140;
+  padding:12px 38px;background:rgba(155,110,40,.16);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font);font-size:.9rem;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;backdrop-filter:blur(10px);
+  transition:background .2s,border-color .2s;-webkit-tap-highlight-color:transparent;white-space:nowrap;
+}
+#fab:hover,#fab:active{background:rgba(155,110,40,.36);border-color:var(--amber)}
+#fab.on{background:rgba(155,110,40,.32);border-color:var(--amber);color:#dcaa48}
+
+#ministat{position:fixed;top:14px;right:14px;z-index:140;display:flex;gap:7px}
+.mchip{
+  display:flex;align-items:center;gap:5px;background:rgba(13,10,6,.82);
+  border:1px solid var(--border);border-radius:4px;padding:5px 9px;backdrop-filter:blur(10px);
+}
+.mname{font-family:var(--font);font-size:.58rem;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.mdots{display:flex;gap:4px;align-items:center}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
-<div id="ctrl" class="panel">
-  <h1>Elmer &amp; Elsie</h1>
-  <div class="sub">W. Grey Walter · 1948 · Bristol</div>
-  <button id="btn-start">▶&nbsp;&nbsp;Start</button>
-  <hr>
-  <div class="row">
-    <div class="lbl">Light intensity <span id="v-int">60</span></div>
-    <span class="hint">The turtles seek light. Reduce to zero for aimless wandering.</span>
-    <input type="range" id="sl-int" min="0" max="100" value="60">
+<button id="ham" aria-label="Menu">
+  <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+</button>
+<div id="ov"></div>
+
+<div id="drawer">
+  <div id="dhead">
+    <h1>Elmer &amp; Elsie</h1>
+    <div class="sub">W. Grey Walter · 1948 · Bristol</div>
   </div>
-  <hr>
-  <div class="row">
-    <div class="lbl" style="margin-bottom:6px">Environment</div>
-    <span class="hint">Drag any obstacle to move it. Drag its end handle to rotate. Active before or during motion.</span>
+  <div id="dbody">
+    <h2>Controls</h2>
+    <button class="btn" id="btn-ds">▶&nbsp;&nbsp;Start</button>
+    <div class="row">
+      <div class="lbl">Light intensity <span id="v-int">60</span></div>
+      <span class="hint">The turtles seek light. Reduce to zero for aimless wandering.</span>
+      <input type="range" id="sl-int" min="0" max="100" value="60">
+    </div>
+    <hr>
+    <span class="hint" style="margin-bottom:10px"><strong style="color:var(--text)">Obstacles</strong> — drag to move, drag end handle to rotate.</span>
+    <button class="btn" id="btn-mir">⊹&nbsp;&nbsp;Place Mirror</button>
+    <span class="hint">Mirror creates a feedback loop — drag the frozen turtle to relocate and release.</span>
+    <hr>
+    <button class="btn btn-trails on" id="btn-trails">〰&nbsp;&nbsp;Trails: ON</button>
+    <span class="hint">Trail colour encodes state: yellow = seeking · orange = hesitating · red = avoiding · cyan = frozen.</span>
+    <button class="btn" id="btn-clear">✕&nbsp;&nbsp;Clear Canvas</button>
+    <button class="btn" id="btn-png">↓&nbsp;&nbsp;Save as PNG</button>
+    <hr>
+    <span class="hint"><strong style="color:var(--text)">Touch</strong> — tap a turtle to inject a stimulus. Drag when frozen to relocate.</span>
+
+    <h2>Circuit State</h2>
+    <div class="tblock">
+      <div class="tname">Elmer</div>
+      <div class="badge s-idle" id="elmer-badge">idle</div><br>
+      <div class="nrow"><div class="dot A" id="elmer-nA"></div><span>Neuron A — Phototropic</span><span class="nval" id="elmer-vA">0.00</span></div>
+      <div class="nrow"><div class="dot B" id="elmer-nB"></div><span>Neuron B — Touch</span><span class="nval" id="elmer-vB">0.00</span></div>
+    </div>
+    <div class="tblock">
+      <div class="tname">Elsie</div>
+      <div class="badge s-idle" id="elsie-badge">idle</div><br>
+      <div class="nrow"><div class="dot A" id="elsie-nA"></div><span>Neuron A — Phototropic</span><span class="nval" id="elsie-vA">0.00</span></div>
+      <div class="nrow"><div class="dot B" id="elsie-nB"></div><span>Neuron B — Touch</span><span class="nval" id="elsie-vB">0.00</span></div>
+    </div>
+    <div id="log"></div>
+
+    <h2>About</h2>
+    <div id="about-txt">
+      In 1948, neurologist <strong>William Grey Walter</strong> built two small robots at the Burden Neurological Institute in Bristol. Housed in transparent shells, <strong>Elmer</strong> and <strong>Elsie</strong> each ran on just <em>two vacuum tubes</em> — one for light-seeking, one for obstacle avoidance. Without any programming in the modern sense, they exhibited phototaxis, wandering, and spontaneous rest near their light source. In one experiment, a lamp was placed before a mirror: approaching it, the robot detected its own reflected glow and entered a feedback loop of flickering and trembling. Walter wrote that, observed in an animal, this behaviour might be taken as evidence of <em>a rudimentary form of self-awareness</em>.
+    </div>
   </div>
-  <button id="btn-mir">⊹&nbsp;&nbsp;Place Mirror</button>
-  <span class="hint">The mirror creates a feedback loop — the turtle freezes. Drag it to release.</span>
-  <hr>
-  <button id="btn-trails" class="on">〰&nbsp;&nbsp;Trails: ON</button>
-  <span class="hint">Generative art canvas. The visual traces change color reflecting the cognitive states of the turtles.</span>
-  <hr>
-  <span class="hint"><strong style="color:var(--text)">Touch</strong> — click a turtle to inject a stimulus, or drag it when frozen to relocate.</span>
 </div>
 
-<div id="dash" class="panel">
-  <h2>Circuit State</h2>
-  <div class="tblock">
-    <div class="tname">Elmer</div>
-    <div class="badge s-idle" id="elmer-badge">idle</div><br>
-    <div class="nrow"><div class="dot A" id="elmer-nA"></div><span>Neuron A — Phototropic</span><span class="nval" id="elmer-vA">0.00</span></div>
-    <div class="nrow"><div class="dot B" id="elmer-nB"></div><span>Neuron B — Touch</span><span class="nval" id="elmer-vB">0.00</span></div>
+<div id="ministat">
+  <div class="mchip">
+    <span class="mname">E1</span>
+    <div class="mdots">
+      <div class="dot A" id="m-elmer-nA"></div>
+      <div class="dot B" id="m-elmer-nB"></div>
+    </div>
   </div>
-  <div class="tblock">
-    <div class="tname">Elsie</div>
-    <div class="badge s-idle" id="elsie-badge">idle</div><br>
-    <div class="nrow"><div class="dot A" id="elsie-nA"></div><span>Neuron A — Phototropic</span><span class="nval" id="elsie-vA">0.00</span></div>
-    <div class="nrow"><div class="dot B" id="elsie-nB"></div><span>Neuron B — Touch</span><span class="nval" id="elsie-vB">0.00</span></div>
+  <div class="mchip">
+    <span class="mname">E2</span>
+    <div class="mdots">
+      <div class="dot A" id="m-elsie-nA"></div>
+      <div class="dot B" id="m-elsie-nB"></div>
+    </div>
   </div>
-  <div id="log"></div>
 </div>
+
+<button id="fab">▶&nbsp;&nbsp;Start</button>
 
 <script>
-// ── CONSTANTS ───────────────────────────────────────────────
-const TR=20, SCN=.022, BSPD=1.55, SEEK=.07, HESI=.67;
-const TLEN=1400, TRATE=.044, AVB=28, AVT=38, AVC=26, HR=8; // TLEN incrementato per pittura generativa
-const REST_IN=26, REST_OUT=58;
-const FRZ_MIR=65, FRZ_TUR=86;
+// ── CONSTANTS ─────────────────────────────────────────────────
+const TR=20,SCN=.022,BSPD=1.55,SEEK=.07,HESI=.67;
+const TLEN=6000,TRATE=.044,AVB=28,AVT=38,AVC=26,HR=11;
+const REST_IN=26,REST_OUT=58,FRZ_MIR=65,FRZ_TUR=86;
 
-// ── STATE ────────────────────────────────────────────────────
-const cv=document.getElementById('c'), cx=cv.getContext('2d');
-let W,H,fr=0,running=false,seeded=false,drag=null;
-let showTrails=true; // Flag per visualizzazione tracce
-let light={x:0,y:0,nx:0,ny:0,intensity:60};
-let turtles=[], obstacles=[], logs=[];
-const AR={l:0,r:0,t:0,b:0}; 
-let AX=0,AY=0;               
+// ── STATE ─────────────────────────────────────────────────────
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let W,H,fr=0,running=false,seeded=false,drag=null,showTrails=true;
+let light={x:0,y:0,nx:.5,ny:.28,intensity:60};
+let turtles=[],obstacles=[],logs=[];
+const AR={l:0,r:0,t:0,b:0};
+let AX=0,AY=0;
 
-// ── MATH ─────────────────────────────────────────────────────
+// ── MATH ──────────────────────────────────────────────────────
 const dst=(ax,ay,bx,by)=>Math.sqrt((ax-bx)**2+(ay-by)**2);
 const dst2=(ax,ay,bx,by)=>(ax-bx)**2+(ay-by)**2;
 const adiff=(a,b)=>{let v=b-a;while(v>Math.PI)v-=6.2832;while(v<-Math.PI)v+=6.2832;return v};
@@ -138,135 +216,97 @@ function cRect(px,py,pr,rx,ry,rw,rh,ra){
 const hpos=o=>({x:o.x+Math.cos(o.angle)*(o.w/2+14),y:o.y+Math.sin(o.angle)*(o.w/2+14)});
 
 function compAR(){
-  AR.l=310; AR.r=W-278; AR.t=22; AR.b=H-108;
-  AX=(AR.l+AR.r)/2; AY=(AR.t+AR.b)/2;
+  const p=16;AR.l=p;AR.r=W-p;AR.t=p;AR.b=H-p;
+  AX=(AR.l+AR.r)/2;AY=(AR.t+AR.b)/2;
 }
 
-// ── INIT ─────────────────────────────────────────────────────
-function mkT(id,name,nx,ny){
-  return{id,name,nx,ny,x:0,y:0,hx:0,hy:0,angle:-Math.PI/2,scan:0,
-    nA:0,nB:0,state:'idle',trail:[],
-    avT:0,avPh:null,avDir:1,avAmt:0,avCl:0,fTick:0,returning:false};
-}
-function mkO(id,nx,ny,w,angle,type='obstacle'){
-  return{id,nx,ny,x:0,y:0,w,h:11,angle,type,active:type!=='mirror'};
-}
+// ── INIT ──────────────────────────────────────────────────────
+const mkT=(id,name,nx,ny)=>({id,name,nx,ny,x:0,y:0,hx:0,hy:0,
+  angle:-Math.PI/2,scan:0,nA:0,nB:0,state:'idle',trail:[],
+  avT:0,avPh:null,avDir:1,avAmt:0,avCl:0,fTick:0,returning:false});
+const mkO=(id,nx,ny,w,angle,type='obstacle')=>
+  ({id,nx,ny,x:0,y:0,w,h:11,angle,type,active:type!=='mirror'});
 
-function updatePositionsFromNormalized(){
-  const aw = AR.r - AR.l, ah = AR.b - AR.t;
-  light.x = AR.l + aw * light.nx;
-  light.y = AR.t + ah * light.ny;
-  obstacles.forEach(o => {
-    o.x = AR.l + aw * o.nx;
-    o.y = AR.t + ah * o.ny;
-  });
-  turtles.forEach(t => {
-    t.hx = AR.l + aw * t.nx;
-    t.hy = AR.t + ah * t.ny;
-    if(!running && t.state === 'idle'){
-      t.x = t.hx; t.y = t.hy;
-    } else {
-      t.x = Math.max(AR.l+TR, Math.min(AR.r-TR, t.x));
-      t.y = Math.max(AR.t+TR, Math.min(AR.b-TR, t.y));
-    }
+function normToAbs(){
+  const aw=AR.r-AR.l,ah=AR.b-AR.t;
+  light.x=AR.l+aw*light.nx;light.y=AR.t+ah*light.ny;
+  obstacles.forEach(o=>{o.x=AR.l+aw*o.nx;o.y=AR.t+ah*o.ny;});
+  turtles.forEach(t=>{
+    t.hx=AR.l+aw*t.nx;t.hy=AR.t+ah*t.ny;
+    if(!running&&t.state==='idle'){t.x=t.hx;t.y=t.hy;}
+    else{t.x=Math.max(AR.l+TR,Math.min(AR.r-TR,t.x));
+         t.y=Math.max(AR.t+TR,Math.min(AR.b-TR,t.y));}
   });
 }
 
 function setup(){
-  W=cv.width=window.innerWidth; H=cv.height=window.innerHeight;
+  W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;
   if(seeded)return;
   compAR();
-  light={intensity:60, nx:0.5, ny:0.28, x:0, y:0};
-  turtles=[
-    mkT(0,'Elmer', 0.38, 0.78),
-    mkT(1,'Elsie', 0.62, 0.78),
-  ];
+  turtles=[mkT(0,'Elmer',.38,.78),mkT(1,'Elsie',.62,.78)];
   obstacles=[
-    mkO(0, 0.28, 0.52, 115, 0),
-    mkO(1, 0.72, 0.52,  92, Math.PI/2),
-    mkO(2, 0.50, 0.65, 132, Math.PI/10),
-    mkO(3, 0.18, 0.42,  82, -Math.PI/5),
-    mkO(4, 0.82, 0.42, 102, Math.PI/6),
-    mkO(5, 0.50, 0.50,  92, 0, 'mirror'),
+    mkO(0,.28,.52,115,0),
+    mkO(1,.72,.52,92,Math.PI/2),
+    mkO(2,.50,.65,132,Math.PI/10),
+    mkO(3,.18,.42,82,-Math.PI/5),
+    mkO(4,.82,.42,102,Math.PI/6),
+    mkO(5,.50,.50,92,0,'mirror'),
   ];
-  updatePositionsFromNormalized();
-  seeded=true;
+  normToAbs();seeded=true;
 }
 
-// ── SENSING ──────────────────────────────────────────────────
+// ── SENSING ───────────────────────────────────────────────────
 function scanLight(t,lx,ly,intens){
   if(intens<=0)return 0;
   const dd=dst(t.x,t.y,lx,ly)||.1;
-  const la=Math.atan2(ly-t.y,lx-t.x);
-  const diff=Math.abs(adiff(t.angle+t.scan,la));
-  const cone=Math.PI/5.5;
-  if(diff>cone)return 0;
-  const df=Math.max(0,1-dd/(Math.max(W,H)*.88));
-  return(intens/100)*df*(1-diff/cone);
+  const diff=Math.abs(adiff(t.angle+t.scan,Math.atan2(ly-t.y,lx-t.x)));
+  const cone=Math.PI/5.5;if(diff>cone)return 0;
+  return(intens/100)*Math.max(0,1-dd/(Math.max(W,H)*.88))*(1-diff/cone);
 }
 
 function mirFB(t,mo){
   if(!mo||!mo.active)return 0;
-  const dd=dst(t.x,t.y,mo.x,mo.y)||.1;
-  if(dd>205)return 0;
+  const dd=dst(t.x,t.y,mo.x,mo.y)||.1;if(dd>205)return 0;
   const aToM=Math.atan2(mo.y-t.y,mo.x-t.x);
-  const fd=Math.abs(adiff(t.angle,aToM));
-  if(fd>Math.PI*.56)return 0;
-  const sd=Math.abs(adiff(t.angle+t.scan,aToM));
-  if(sd>Math.PI/4.5)return 0;
-  const prox=Math.max(0,1-dd/205), face=1-fd/(Math.PI*.56), scn=1-sd/(Math.PI/4.5);
-  return Math.min(1,(t.nA*.92+light.intensity/100*.48)*prox*face*scn);
+  const fd=Math.abs(adiff(t.angle,aToM));if(fd>Math.PI*.56)return 0;
+  const sd=Math.abs(adiff(t.angle+t.scan,aToM));if(sd>Math.PI/4.5)return 0;
+  return Math.min(1,(t.nA*.92+light.intensity/100*.48)*
+    Math.max(0,1-dd/205)*(1-fd/(Math.PI*.56))*(1-sd/(Math.PI/4.5)));
 }
 
 function checkFrozen(t){
   if(!running||t.returning||t.state==='resting'||t.state==='frozen')return false;
   const mo=obstacles.find(o=>o.type==='mirror'&&o.active);
-  if(mo&&dst2(t.x,t.y,mo.x,mo.y)<FRZ_MIR**2){
+  if(mo&&dst2(t.x,t.y,mo.x,mo.y)<FRZ_MIR**2)
     if(Math.abs(adiff(t.angle,Math.atan2(mo.y-t.y,mo.x-t.x)))<Math.PI/2.3)return true;
-  }
   for(const o of turtles){
     if(o.id===t.id)continue;
-    if(dst2(t.x,t.y,o.x,o.y)<FRZ_TUR**2){
-      const aToO=Math.atan2(o.y-t.y,o.x-t.x);
-      const aFrO=Math.atan2(t.y-o.y,t.x-o.x);
-      if(Math.abs(adiff(t.angle,aToO))<Math.PI/2.6&&
-         Math.abs(adiff(o.angle,aFrO))<Math.PI/2.6)return true;
-    }
+    if(dst2(t.x,t.y,o.x,o.y)<FRZ_TUR**2)
+      if(Math.abs(adiff(t.angle,Math.atan2(o.y-t.y,o.x-t.x)))<Math.PI/2.6&&
+         Math.abs(adiff(o.angle,Math.atan2(t.y-o.y,t.x-o.x)))<Math.PI/2.6)return true;
   }
   return false;
 }
 
-// ── TURTLE UPDATE ─────────────────────────────────────────────
+// ── UPDATE ────────────────────────────────────────────────────
 function updateT(t){
   if(!running&&!t.returning){t.scan+=SCN*.25;return;}
-
   if(t.returning){
     const dx=t.hx-t.x,dy=t.hy-t.y,dd=Math.sqrt(dx*dx+dy*dy);
-    if(dd<2){
-      t.x=t.hx;t.y=t.hy;t.angle=-Math.PI/2;t.scan=0;
-      t.trail=[];t.returning=false;t.state='idle';
-    }else{
-      const ta=Math.atan2(dy,dx);
-      t.angle+=adiff(t.angle,ta)*.1;
+    if(dd<2){t.x=t.hx;t.y=t.hy;t.angle=-Math.PI/2;t.scan=0;t.trail=[];t.returning=false;t.state='idle';}
+    else{t.angle+=adiff(t.angle,Math.atan2(dy,dx))*.1;
       t.x+=Math.cos(t.angle)*Math.min(2.8,dd*.07+1.2);
-      t.y+=Math.sin(t.angle)*Math.min(2.8,dd*.07+1.2);
-    }
+      t.y+=Math.sin(t.angle)*Math.min(2.8,dd*.07+1.2);}
     t.nA*=.95;t.nB*=.88;return;
   }
-
   if(t.avCl>0)t.avCl--;
-
   if(t.state==='frozen'){
-    t.fTick++;
-    t.nA=.45+.45*Math.sin(t.fTick*.32);
-    t.nB=.45+.45*Math.sin(t.fTick*.37+.6);
-    return;
+    t.fTick++;t.nA=.45+.45*Math.sin(t.fTick*.32);t.nB=.45+.45*Math.sin(t.fTick*.37+.6);return;
   }
-
   if(t.avT>0){
     t.avT--;
     if(t.avPh==='back'){
-      t.x-=Math.cos(t.angle)*1.45; t.y-=Math.sin(t.angle)*1.45;
+      t.x-=Math.cos(t.angle)*1.45;t.y-=Math.sin(t.angle)*1.45;
       if(t.avT<=0){t.avPh='turn';t.avT=AVT;}
     }else{
       t.angle+=t.avDir*(t.avAmt/AVT);
@@ -274,49 +314,43 @@ function updateT(t){
     }
     t.nB*=.97;pushTrail(t);return;
   }
-
   const dtL=dst(t.x,t.y,light.x,light.y);
   if(t.state==='resting'){
     if(dtL>REST_OUT){t.state='scanning';emit(`${t.name} resumed exploration`);}
     t.scan*=.9;t.nA+=(.95-t.nA)*.06;t.nB*=.9;return;
   }
   if(dtL<REST_IN){
-    if(t.state!=='resting'){t.state='resting';emit(`${t.name} found the light`);}
+    if(t.state!=='resting'){t.state='resting';emit(`${t.name} found the light`);haptic(60);}
     t.scan*=.9;t.nA+=(.95-t.nA)*.06;t.nB*=.9;return;
   }
-
   const mo=obstacles.find(o=>o.type==='mirror'&&o.active);
-  const ls=scanLight(t,light.x,light.y,light.intensity);
-  const mf=mirFB(t,mo);
-  const tot=Math.min(1,ls+mf);
-  t.nA+=(tot-t.nA)*.1; t.nB*=.9;
-
+  t.nA+=(Math.min(1,scanLight(t,light.x,light.y,light.intensity)+mirFB(t,mo))-t.nA)*.1;
+  t.nB*=.9;
   if(t.nA>HESI){t.state='hesitating';t.fTick++;}
   else if(t.nA>SEEK){t.state='seeking';t.fTick=0;}
   else{t.state='scanning';t.fTick=0;}
-
   if(checkFrozen(t)){
     t.state='frozen';t.fTick=0;
-    emit(`${t.name}: locked in feedback — drag to relocate`);
-    return;
+    emit(`${t.name}: locked in feedback — drag to relocate`);haptic([40,30,40]);return;
   }
-
-  if(t.state==='scanning'){t.scan+=SCN;}
+  if(t.state==='scanning')t.scan+=SCN;
   else if(t.state==='seeking'||t.state==='hesitating'){
-    t.scan*=.93;
-    t.angle+=adiff(t.angle,Math.atan2(light.y-t.y,light.x-t.x))*TRATE;
+    t.scan*=.93;t.angle+=adiff(t.angle,Math.atan2(light.y-t.y,light.x-t.x))*TRATE;
   }
-
-  let spd=0;
-  if(t.state==='scanning')   spd=BSPD*.65;
-  if(t.state==='seeking')    spd=BSPD;
-  if(t.state==='hesitating') spd=Math.sin(t.fTick*.5)>.15?BSPD*.32:0;
-
-  const pad=6,nx=t.x+Math.cos(t.angle)*spd,ny=t.y+Math.sin(t.angle)*spd;
-  if(nx<AR.l+pad||nx>AR.r-pad||ny<AR.t+pad||ny>AR.b-pad){
-    t.angle+=adiff(t.angle,Math.atan2(AY-t.y,AX-t.x))*.13;
-  }else{t.x=nx;t.y=ny;}
-
+  let sp=0;
+  if(t.state==='scanning')   sp=BSPD*.65;
+  if(t.state==='seeking')    sp=BSPD;
+  if(t.state==='hesitating') sp=Math.sin(t.fTick*.5)>.15?BSPD*.32:0;
+  // Hard clamp: rientra nel perimetro se qualcosa ha causato uno sforamento
+  t.x=Math.max(AR.l+TR,Math.min(AR.r-TR,t.x));
+  t.y=Math.max(AR.t+TR,Math.min(AR.b-TR,t.y));
+  // Steering verso il centro quando la tartaruga è entro 3×TR da un bordo
+  const wm=TR*3.2;
+  if(t.x<AR.l+wm||t.x>AR.r-wm||t.y<AR.t+wm||t.y>AR.b-wm)
+    t.angle+=adiff(t.angle,Math.atan2(AY-t.y,AX-t.x))*.24;
+  // Movimento con clamp del risultato: non può mai uscire
+  t.x=Math.max(AR.l+TR,Math.min(AR.r-TR,t.x+Math.cos(t.angle)*sp));
+  t.y=Math.max(AR.t+TR,Math.min(AR.b-TR,t.y+Math.sin(t.angle)*sp));
   if(t.avCl===0)checkColl(t);
   pushTrail(t);
 }
@@ -326,15 +360,13 @@ function checkColl(t){
     if(!o.active)continue;
     if(cRect(t.x,t.y,TR,o.x,o.y,o.w,o.h,o.angle)){
       const pa=Math.atan2(t.y-o.y,t.x-o.x);
-      t.x+=Math.cos(pa)*3;t.y+=Math.sin(pa)*3;
-      doAvoid(t);return;
+      t.x+=Math.cos(pa)*3;t.y+=Math.sin(pa)*3;doAvoid(t);return;
     }
   }
   for(const o of turtles){
     if(o.id===t.id||o.state==='frozen')continue;
     if(dst2(t.x,t.y,o.x,o.y)<(TR*1.88)**2){
-      if(o.avT===0&&!o.returning)doAvoid(o);
-      doAvoid(t);return;
+      if(o.avT===0&&!o.returning)doAvoid(o);doAvoid(t);return;
     }
   }
 }
@@ -342,38 +374,33 @@ function checkColl(t){
 function doAvoid(t){
   if(t.avT>0)return;
   t.nB=1;t.state='avoiding';t.avPh='back';t.avT=AVB;
-  t.avDir=Math.random()>.5?1:-1;
-  t.avAmt=.38*Math.PI+Math.random()*.52*Math.PI;
-  emit(`${t.name} avoided contact`);
+  t.avDir=Math.random()>.5?1:-1;t.avAmt=.38*Math.PI+Math.random()*.52*Math.PI;
+  emit(`${t.name} avoided contact`);haptic(18);
 }
 
 function pushTrail(t){
   if(t.returning)return;
-  
-  let r, g, b;
-  // Colori base per Scanning
-  if (t.id === 0) { r=192; g=132; b=46; } // Elmer - Ambra
-  else            { r=82;  g=162; b=125; } // Elsie - Verde
-
-  // Colori condizionali per mappare gli stati cognitivi
-  if (t.state === 'avoiding')        { r=220; g=60;  b=50; }  // Rosso intenso
-  else if (t.state === 'frozen')     { r=110; g=190; b=250; } // Ciano neon
-  else if (t.state === 'seeking')    { r=255; g=220; b=90; }  // Giallo brillante
-  else if (t.state === 'hesitating') { r=230; g=120; b=40; }  // Arancione saturo
-  else if (t.state === 'resting')    { r=100; g=90;  b=80; }  // Grigio caldo dim
-
-  t.trail.push({x:t.x, y:t.y, r, g, b});
-  if(t.trail.length > TLEN) t.trail.shift();
+  let r,g,b;
+  if(t.id===0){r=192;g=132;b=46;}else{r=82;g=162;b=125;}
+  if(t.state==='avoiding'){r=220;g=60;b=50;}
+  else if(t.state==='frozen'){r=110;g=190;b=250;}
+  else if(t.state==='seeking'){r=255;g=220;b=90;}
+  else if(t.state==='hesitating'){r=230;g=120;b=40;}
+  else if(t.state==='resting'){r=100;g=90;b=80;}
+  t.trail.push({x:t.x,y:t.y,r,g,b});
+  if(t.trail.length>TLEN)t.trail.shift();
 }
 
-// ── RENDERING ────────────────────────────────────────────────
+function haptic(p=20){if(navigator.vibrate)navigator.vibrate(p);}
+
+// ── DRAW ──────────────────────────────────────────────────────
 function draw(){
   fr++;
-  cx.fillStyle='rgba(13,10,7,.19)'; cx.fillRect(0,0,W,H);
+  cx.fillStyle='rgba(13,10,7,.19)';cx.fillRect(0,0,W,H);
   drawArena();
   cx.globalCompositeOperation='lighter';
   drawLGlow();
-  turtles.forEach(drawTrailFx);
+  if(showTrails)turtles.forEach(drawTrail);
   turtles.forEach(drawAura);
   cx.globalCompositeOperation='source-over';
   obstacles.forEach(o=>{if(o.active)drawObs(o);});
@@ -384,13 +411,11 @@ function draw(){
 }
 
 function drawArena(){
-  cx.fillStyle='rgba(20,16,9,.07)';
-  cx.fillRect(AR.l,AR.t,AR.r-AR.l,AR.b-AR.t);
-  cx.strokeStyle='rgba(148,104,34,.3)'; cx.lineWidth=1.2;
+  cx.fillStyle='rgba(20,16,9,.07)';cx.fillRect(AR.l,AR.t,AR.r-AR.l,AR.b-AR.t);
+  cx.strokeStyle='rgba(148,104,34,.2)';cx.lineWidth=1;
   cx.strokeRect(AR.l,AR.t,AR.r-AR.l,AR.b-AR.t);
-  const cs=18;
-  cx.strokeStyle='rgba(150,106,36,.62)'; cx.lineWidth=1.6;
-  for(const[x,y,dx,dy] of[[AR.l,AR.t,1,1],[AR.r,AR.t,-1,1],[AR.l,AR.b,1,-1],[AR.r,AR.b,-1,-1]]){
+  const cs=16;cx.strokeStyle='rgba(150,106,36,.52)';cx.lineWidth=1.4;
+  for(const[x,y,dx,dy]of[[AR.l,AR.t,1,1],[AR.r,AR.t,-1,1],[AR.l,AR.b,1,-1],[AR.r,AR.b,-1,-1]]){
     cx.beginPath();cx.moveTo(x+dx*cs,y);cx.lineTo(x,y);cx.lineTo(x,y+dy*cs);cx.stroke();
   }
 }
@@ -400,8 +425,7 @@ function drawLGlow(){
   const r=44+light.intensity*2.2;
   const g=cx.createRadialGradient(light.x,light.y,0,light.x,light.y,r);
   g.addColorStop(0,`rgba(255,240,150,${.14+light.intensity/580})`);
-  g.addColorStop(.4,'rgba(255,205,72,.04)');
-  g.addColorStop(1,'rgba(0,0,0,0)');
+  g.addColorStop(.4,'rgba(255,205,72,.04)');g.addColorStop(1,'rgba(0,0,0,0)');
   cx.beginPath();cx.arc(light.x,light.y,r,0,6.283);cx.fillStyle=g;cx.fill();
 }
 
@@ -410,26 +434,17 @@ function drawLCore(){
   cx.fillStyle='rgba(255,252,195,.94)';cx.fill();
   cx.beginPath();cx.arc(light.x,light.y,10,0,6.283);
   cx.strokeStyle='rgba(255,220,100,.3)';cx.lineWidth=1;cx.stroke();
-  cx.font='8px Courier New';cx.fillStyle='rgba(175,145,58,.46)';
+  cx.font='8px Courier New';cx.fillStyle='rgba(175,145,58,.44)';
   cx.textAlign='center';cx.fillText('light source',light.x,light.y+20);
 }
 
-function drawTrailFx(t){
-  if(!showTrails || t.trail.length < 2) return;
-  for(let i=1; i<t.trail.length; i++){
-    const p1 = t.trail[i-1];
-    const p2 = t.trail[i];
-    const p = i / t.trail.length;
-    // Curva quadratica per l'opacità: scompare gradualmente
-    const alpha = Math.pow(p, 2) * 0.35; 
-    
-    cx.beginPath();
-    cx.moveTo(p1.x, p1.y);
-    cx.lineTo(p2.x, p2.y);
-    cx.strokeStyle = `rgba(${p2.r},${p2.g},${p2.b},${alpha})`;
-    cx.lineWidth = p * 2.5;
-    cx.lineCap = 'round';
-    cx.stroke();
+function drawTrail(t){
+  if(t.trail.length<2)return;
+  for(let i=1;i<t.trail.length;i++){
+    const p=i/t.trail.length,p2=t.trail[i],p1=t.trail[i-1];
+    cx.beginPath();cx.moveTo(p1.x,p1.y);cx.lineTo(p2.x,p2.y);
+    cx.strokeStyle=`rgba(${p2.r},${p2.g},${p2.b},${p*p*.2+p*.08})`;
+    cx.lineWidth=p*2.5;cx.lineCap='round';cx.stroke();
   }
 }
 
@@ -446,25 +461,20 @@ function drawAura(t){
 }
 
 function drawTurtle(t){
-  cx.save();
-  cx.translate(t.x,t.y);
-
+  cx.save();cx.translate(t.x,t.y);
   if(t.state==='frozen'){
-    const jsc=Math.min(1+t.fTick*.016,3.8);
-    cx.translate((Math.random()-.5)*4*jsc,(Math.random()-.5)*4*jsc);
+    const j=Math.min(1+t.fTick*.016,3.8);
+    cx.translate((Math.random()-.5)*4*j,(Math.random()-.5)*4*j);
   }
   cx.rotate(t.angle+Math.PI/2);
-
-  const isE=t.id===0;
-  const br=isE?122:76, bg=isE?92:112, bb=isE?48:70;
+  const ie=t.id===0;
+  const br=ie?122:76,bg=ie?92:112,bb=ie?48:70;
   let r=Math.min(255,br+t.nA*78+t.nB*48);
   let g=Math.min(255,bg+t.nA*20-t.nB*28);
   let b=Math.min(255,bb-t.nA*10-t.nB*25);
-  if(t.state==='frozen') {r=Math.floor(r*.68+42);g=Math.floor(g*.78+32);b=Math.min(255,b+85);}
+  if(t.state==='frozen'){r=Math.floor(r*.68+42);g=Math.floor(g*.78+32);b=Math.min(255,b+85);}
   if(t.state==='resting'){r=Math.min(255,r+32);g=Math.min(255,g+20);}
-
   const bth=t.state==='resting'?1+Math.sin(fr*.04+t.id*1.6)*.026:1+Math.sin(fr*.032+t.id*1.6)*.011;
-
   const sg=cx.createRadialGradient(-3,-5,1,0,0,TR);
   sg.addColorStop(0,`rgba(${r+58},${g+34},${b+20},.92)`);
   sg.addColorStop(.52,`rgba(${r},${g},${b},.82)`);
@@ -472,43 +482,35 @@ function drawTurtle(t){
   cx.beginPath();cx.ellipse(0,3,16*bth,20*bth,0,0,6.283);
   cx.fillStyle=sg;cx.fill();
   cx.strokeStyle=`rgba(${r+92},${g+56},${b+24},.38)`;cx.lineWidth=1;cx.stroke();
-
   cx.strokeStyle=`rgba(${r+62},${g+38},${b+14},.13)`;cx.lineWidth=.6;
   [.42,.74].forEach(s=>{cx.beginPath();cx.ellipse(0,3,16*s,20*s,0,0,6.283);cx.stroke();});
   cx.beginPath();cx.moveTo(0,-17);cx.lineTo(0,22);cx.moveTo(-12,3);cx.lineTo(12,3);cx.stroke();
-
   cx.beginPath();cx.ellipse(0,-20,5,6,0,0,6.283);
   cx.fillStyle=`rgba(${r+30},${g+20},${b+12},.88)`;cx.fill();
   cx.strokeStyle=`rgba(${r+72},${g+46},${b+22},.35)`;cx.lineWidth=.8;cx.stroke();
-
   let nAv=Math.min(1,t.nA*1.5);
-  if(t.state==='frozen')  nAv=.45+.45*Math.sin(t.fTick*.32);
+  if(t.state==='frozen') nAv=.45+.45*Math.sin(t.fTick*.32);
   if(t.state==='resting') nAv=.8+.2*Math.sin(fr*.05+t.id);
   cx.beginPath();cx.arc(-6,-7,4.5,0,6.283);
   cx.fillStyle=`rgba(235,155,38,${.1+nAv*.8})`;cx.fill();
   if(nAv>.22){cx.beginPath();cx.arc(-6,-7,4.5+nAv*4.8,0,6.283);
     cx.strokeStyle=`rgba(235,155,38,${nAv*.28})`;cx.lineWidth=1;cx.stroke();}
-
   let nBv=Math.min(1,t.nB*1.5);
   if(t.state==='frozen') nBv=.45+.45*Math.sin(t.fTick*.37+.6);
   cx.beginPath();cx.arc(6,10,4.5,0,6.283);
   cx.fillStyle=`rgba(212,55,28,${.08+nBv*.84})`;cx.fill();
   if(nBv>.22){cx.beginPath();cx.arc(6,10,4.5+nBv*4.8,0,6.283);
     cx.strokeStyle=`rgba(212,55,28,${nBv*.28})`;cx.lineWidth=1;cx.stroke();}
-
-  const isRest=t.state==='resting';
-  const sl=isRest?4+nAv*3:28+t.nA*16;
+  const sl=t.state==='resting'?4+nAv*3:28+t.nA*16;
   const sa=t.state==='frozen'?t.scan+Math.sin(t.fTick*.33)*1.4:t.scan;
-  const sx=Math.sin(sa)*sl, sy=-Math.cos(sa)*sl;
+  const sx=Math.sin(sa)*sl,sy=-Math.cos(sa)*sl;
   cx.beginPath();cx.moveTo(0,-24);cx.lineTo(sx,-24+sy);
   cx.strokeStyle=`rgba(255,215,100,${.2+t.nA*.56})`;cx.lineWidth=1.5;cx.stroke();
   cx.beginPath();cx.arc(sx,-24+sy,2,0,6.283);
   cx.fillStyle=`rgba(255,225,120,${.28+t.nA*.5})`;cx.fill();
-
   cx.restore();
-
   cx.font='8px Courier New';cx.textAlign='center';
-  cx.fillStyle=isE?'rgba(175,125,50,.58)':'rgba(75,155,115,.58)';
+  cx.fillStyle=ie?'rgba(175,125,50,.56)':'rgba(75,155,115,.56)';
   cx.fillText(t.name.toUpperCase(),t.x,t.y+TR+14);
 }
 
@@ -520,23 +522,18 @@ function drawAnnot(t){
     cx.beginPath();cx.arc(t.x,t.y,TR*1.5+p*6,0,6.283);
     cx.strokeStyle=`rgba(228,178,52,${.16+p*.16})`;cx.lineWidth=1;cx.stroke();
     cx.font='8px Courier New';cx.textAlign='center';
-    cx.fillStyle=`rgba(212,168,50,${.44+p*.3})`;
-    cx.fillText('at rest',t.x,t.y-TR-14);
-    return;
+    cx.fillStyle=`rgba(212,168,50,${.44+p*.3})`;cx.fillText('at rest',t.x,t.y-TR-14);return;
   }
   if(t.state==='frozen'){
     if(Math.sin(fr*.22)>0){
       cx.font='9px Courier New';cx.textAlign='center';
-      cx.fillStyle='rgba(160,208,238,.8)';
-      cx.fillText('drag to relocate',t.x,t.y-TR-14);
-    }
-    return;
+      cx.fillStyle='rgba(160,208,238,.8)';cx.fillText('drag to relocate',t.x,t.y-TR-14);
+    }return;
   }
   const mo=obstacles.find(o=>o.type==='mirror'&&o.active);
   if(mo&&mirFB(t,mo)>.4){
-    const a=.35+Math.sin(fr*.09)*.26;
     cx.font='9px Courier New';cx.textAlign='center';
-    cx.fillStyle=`rgba(138,195,230,${a})`;
+    cx.fillStyle=`rgba(138,195,230,${.35+Math.sin(fr*.09)*.26})`;
     cx.fillText('self-recognition?',t.x,t.y-TR-14);
   }
 }
@@ -545,19 +542,15 @@ function drawObs(o){
   cx.save();cx.translate(o.x,o.y);cx.rotate(o.angle);
   if(o.type==='mirror'){
     const mg=cx.createLinearGradient(-o.w/2,0,o.w/2,0);
-    mg.addColorStop(0,'rgba(165,200,232,.44)');
-    mg.addColorStop(.5,'rgba(232,248,255,.9)');
-    mg.addColorStop(1,'rgba(152,188,218,.44)');
+    mg.addColorStop(0,'rgba(165,200,232,.44)');mg.addColorStop(.5,'rgba(232,248,255,.9)');mg.addColorStop(1,'rgba(152,188,218,.44)');
     cx.fillStyle=mg;cx.shadowColor='rgba(172,218,255,.42)';cx.shadowBlur=10;
     cx.beginPath();cx.rect(-o.w/2,-o.h/2,o.w,o.h);cx.fill();
-    cx.strokeStyle='rgba(202,228,255,.62)';cx.lineWidth=1;cx.stroke();
-    cx.shadowBlur=0;
+    cx.strokeStyle='rgba(202,228,255,.62)';cx.lineWidth=1;cx.stroke();cx.shadowBlur=0;
     cx.font='7px Courier New';cx.fillStyle='rgba(165,212,248,.52)';
     cx.textAlign='center';cx.fillText('MIRROR',0,-o.h/2-5);
   }else{
     const og=cx.createLinearGradient(-o.w/2,-o.h/2,o.w/2,o.h/2);
-    og.addColorStop(0,'rgba(108,83,48,.84)');
-    og.addColorStop(1,'rgba(62,46,22,.84)');
+    og.addColorStop(0,'rgba(108,83,48,.84)');og.addColorStop(1,'rgba(62,46,22,.84)');
     cx.fillStyle=og;cx.beginPath();cx.rect(-o.w/2,-o.h/2,o.w,o.h);
     cx.fill();cx.strokeStyle='rgba(140,108,58,.48)';cx.lineWidth=1;cx.stroke();
   }
@@ -572,17 +565,28 @@ function drawHandle(o){
   cx.lineWidth=1;cx.stroke();
 }
 
-// ── UI ───────────────────────────────────────────────────────
+// ── UI ────────────────────────────────────────────────────────
 function refreshUI(){
   for(const t of turtles){
     const id=t.name.toLowerCase();
-    const b=document.getElementById(`${id}-badge`);
-    b.className=`badge s-${t.state}`;b.textContent=t.state;
+    const bd=document.getElementById(`${id}-badge`);
+    bd.className=`badge s-${t.state}`;bd.textContent=t.state;
     document.getElementById(`${id}-vA`).textContent=t.nA.toFixed(2);
     document.getElementById(`${id}-vB`).textContent=t.nB.toFixed(2);
-    document.getElementById(`${id}-nA`).className=`dot A${t.nA>.13?' lit':''}`;
-    document.getElementById(`${id}-nB`).className=`dot B${t.nB>.13?' lit':''}`;
+    ['nA','nB'].forEach(n=>{
+      const v=n==='nA'?t.nA:t.nB,k=n==='nA'?'A':'B';
+      const cls=`dot ${k}${v>.13?' lit':''}`;
+      document.getElementById(`${id}-${n}`).className=cls;
+      document.getElementById(`m-${id}-${n}`).className=cls;
+    });
   }
+}
+
+function syncRunBtns(){
+  [document.getElementById('fab'),document.getElementById('btn-ds')].forEach(b=>{
+    b.textContent=running?'■  Stop':'▶  Start';
+    running?b.classList.add('on'):b.classList.remove('on');
+  });
 }
 
 function emit(msg){
@@ -593,99 +597,103 @@ function emit(msg){
     logs.map((l,i)=>`<div class="le${i>1?' old':''}">${l.ts} — ${l.msg}</div>`).join('');
 }
 
-// ── MOUSE ────────────────────────────────────────────────────
+// ── INPUT ─────────────────────────────────────────────────────
 function getP(e){
   const r=cv.getBoundingClientRect();
-  return{x:(e.clientX??e.touches[0].clientX)-r.left, y:(e.clientY??e.touches[0].clientY)-r.top};
+  const s=e.touches?e.touches[0]:(e.changedTouches?e.changedTouches[0]:e);
+  return{x:s.clientX-r.left,y:s.clientY-r.top};
 }
 
-cv.addEventListener('mousedown',e=>{
+function onDown(e){
+  if(e.target!==cv)return;
   const p=getP(e);
-  if(dst(p.x,p.y,light.x,light.y)<18){
-    drag={type:'L',ox:light.x-p.x,oy:light.y-p.y};return;
-  }
+  if(dst(p.x,p.y,light.x,light.y)<22){drag={type:'L',ox:light.x-p.x,oy:light.y-p.y};return;}
   for(const o of obstacles){
     if(!o.active)continue;
-    if(dst(p.x,p.y,hpos(o).x,hpos(o).y)<HR+5){drag={type:'R',o};return;}
+    if(dst(p.x,p.y,hpos(o).x,hpos(o).y)<HR+8){drag={type:'R',o};return;}
   }
   for(const o of[...obstacles].reverse()){
     if(!o.active)continue;
-    if(cRect(p.x,p.y,6,o.x,o.y,o.w,o.h,o.angle)){drag={type:'M',o,ox:o.x-p.x,oy:o.y-p.y};return;}
+    if(cRect(p.x,p.y,8,o.x,o.y,o.w,o.h,o.angle)){drag={type:'M',o,ox:o.x-p.x,oy:o.y-p.y};return;}
   }
   for(const t of turtles){
-    if(dst(p.x,p.y,t.x,t.y)<TR+10){
-      if(t.state==='frozen'){
-        drag={type:'T',t,ox:t.x-p.x,oy:t.y-p.y};
-        cv.style.cursor='grabbing';
-      }else if(running&&!t.returning&&t.avT===0){
-        doAvoid(t);emit(`${t.name} was touched`);
-      }
+    if(dst(p.x,p.y,t.x,t.y)<TR+14){
+      if(t.state==='frozen'){drag={type:'T',t,ox:t.x-p.x,oy:t.y-p.y};}
+      else if(running&&!t.returning&&t.avT===0){doAvoid(t);emit(`${t.name} was touched`);}
       return;
     }
   }
-});
+}
 
-cv.addEventListener('mousemove',e=>{
+function onMove(e){
   const p=getP(e);
   if(drag){
     if(drag.type==='L'){
       light.x=Math.max(AR.l+6,Math.min(AR.r-6,p.x+drag.ox));
       light.y=Math.max(AR.t+6,Math.min(AR.b-6,p.y+drag.oy));
-      light.nx = (light.x - AR.l) / (AR.r - AR.l);
-      light.ny = (light.y - AR.t) / (AR.b - AR.t);
+      light.nx=(light.x-AR.l)/(AR.r-AR.l);light.ny=(light.y-AR.t)/(AR.b-AR.t);
     }
     if(drag.type==='M'){
-      drag.o.x=p.x+drag.ox;
-      drag.o.y=p.y+drag.oy;
-      drag.o.nx = (drag.o.x - AR.l) / (AR.r - AR.l);
-      drag.o.ny = (drag.o.y - AR.t) / (AR.b - AR.t);
+      drag.o.x=p.x+drag.ox;drag.o.y=p.y+drag.oy;
+      drag.o.nx=(drag.o.x-AR.l)/(AR.r-AR.l);drag.o.ny=(drag.o.y-AR.t)/(AR.b-AR.t);
     }
-    if(drag.type==='R'){drag.o.angle=Math.atan2(p.y-drag.o.y,p.x-drag.o.x);}
+    if(drag.type==='R')drag.o.angle=Math.atan2(p.y-drag.o.y,p.x-drag.o.x);
     if(drag.type==='T'){
       drag.t.x=Math.max(AR.l+TR,Math.min(AR.r-TR,p.x+drag.ox));
       drag.t.y=Math.max(AR.t+TR,Math.min(AR.b-TR,p.y+drag.oy));
     }
     return;
   }
-  
-  if(dst(p.x,p.y,light.x,light.y)<18){cv.style.cursor='grab';return;}
+  if(e.touches)return;
+  if(dst(p.x,p.y,light.x,light.y)<22){cv.style.cursor='grab';return;}
   for(const o of obstacles){
     if(!o.active)continue;
-    if(dst(p.x,p.y,hpos(o).x,hpos(o).y)<HR+5){cv.style.cursor='crosshair';return;}
-    if(cRect(p.x,p.y,6,o.x,o.y,o.w,o.h,o.angle)){cv.style.cursor='move';return;}
+    if(dst(p.x,p.y,hpos(o).x,hpos(o).y)<HR+8){cv.style.cursor='crosshair';return;}
+    if(cRect(p.x,p.y,8,o.x,o.y,o.w,o.h,o.angle)){cv.style.cursor='move';return;}
   }
   for(const t of turtles){
-    if(dst(p.x,p.y,t.x,t.y)<TR+10){
-      cv.style.cursor=t.state==='frozen'?'grab':'pointer';
-      return;
-    }
+    if(dst(p.x,p.y,t.x,t.y)<TR+14){cv.style.cursor=t.state==='frozen'?'grab':'pointer';return;}
   }
   cv.style.cursor='default';
-});
+}
 
-window.addEventListener('mouseup',()=>{
-  if(drag && drag.type==='T'){
-    drag.t.state='scanning';
-    drag.t.fTick=0;
+function onUp(){
+  if(drag&&drag.type==='T'){
+    drag.t.state='scanning';drag.t.fTick=0;
     emit(`${drag.t.name} relocated and released`);
   }
-  drag=null;
-});
+  drag=null;cv.style.cursor='default';
+}
 
-// ── CONTROLS ─────────────────────────────────────────────────
-document.getElementById('btn-start').addEventListener('click',()=>{
+cv.addEventListener('mousedown',onDown);
+cv.addEventListener('mousemove',onMove);
+window.addEventListener('mouseup',onUp);
+cv.addEventListener('touchstart',e=>{e.preventDefault();onDown(e);},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();onMove(e);},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();onUp();},{passive:false});
+
+// ── DRAWER ────────────────────────────────────────────────────
+const ham=document.getElementById('ham');
+const drawer=document.getElementById('drawer');
+const ov=document.getElementById('ov');
+const openD=()=>{ham.classList.add('open');drawer.classList.add('open');ov.classList.add('show');};
+const closeD=()=>{ham.classList.remove('open');drawer.classList.remove('open');ov.classList.remove('show');};
+ham.addEventListener('click',()=>drawer.classList.contains('open')?closeD():openD());
+ov.addEventListener('click',closeD);
+
+// ── CONTROLS ──────────────────────────────────────────────────
+function toggleRun(){
   running=!running;
-  const b=document.getElementById('btn-start');
   if(running){
-    b.textContent='■  Stop';b.classList.add('on');
-    turtles.forEach(t=>{t.state='scanning';t.returning=false;});
-    emit('System started');
+    turtles.forEach(t=>{t.state='scanning';t.returning=false;});emit('System started');
   }else{
-    b.textContent='▶  Start';b.classList.remove('on');
     turtles.forEach(t=>{t.returning=true;t.state='idle';t.fTick=0;});
     emit('System stopped — returning to base');
   }
-});
+  syncRunBtns();
+}
+document.getElementById('fab').addEventListener('click',toggleRun);
+document.getElementById('btn-ds').addEventListener('click',toggleRun);
 
 document.getElementById('sl-int').addEventListener('input',e=>{
   light.intensity=+e.target.value;
@@ -697,49 +705,49 @@ document.getElementById('btn-mir').addEventListener('click',()=>{
   mo.active=!mo.active;
   const b=document.getElementById('btn-mir');
   if(mo.active){
-    mo.x=AX;mo.y=AY;
-    mo.nx=0.5;mo.ny=0.5;
-    mo.angle=0;
+    mo.x=AX;mo.y=AY;mo.nx=.5;mo.ny=.5;mo.angle=0;
     b.textContent='⊹  Remove Mirror';b.classList.add('on');
-    emit('Mirror placed — move it near a turtle');
-  }else{
-    b.textContent='⊹  Place Mirror';b.classList.remove('on');
-    emit('Mirror removed');
-  }
+    emit('Mirror placed — drag it near a turtle');
+  }else{b.textContent='⊹  Place Mirror';b.classList.remove('on');emit('Mirror removed');}
 });
 
-document.getElementById('btn-trails').addEventListener('click',(e)=>{
+document.getElementById('btn-trails').addEventListener('click',e=>{
   showTrails=!showTrails;
-  const b=e.target;
-  if(showTrails){
-    b.textContent='〰  Trails: ON';
-    b.classList.add('on');
-    emit('Generative art mode enabled');
-  }else{
-    b.textContent='〰  Trails: OFF';
-    b.classList.remove('on');
-    emit('Generative art mode disabled');
-  }
+  e.target.textContent=showTrails?'〰  Trails: ON':'〰  Trails: OFF';
+  showTrails?e.target.classList.add('on'):e.target.classList.remove('on');
+  emit(showTrails?'Generative art mode on':'Generative art mode off');
 });
 
-// ── LOOP ─────────────────────────────────────────────────────
-function loop(){
-  turtles.forEach(updateT);
-  draw();
-  if(fr%3===0)refreshUI();
-  requestAnimationFrame(loop);
-}
+document.getElementById('btn-clear').addEventListener('click',()=>{
+  turtles.forEach(t=>t.trail=[]);
+  cx.fillStyle='rgba(13,10,7,1)';cx.fillRect(0,0,W,H);
+  emit('Canvas cleared');
+});
+
+document.getElementById('btn-png').addEventListener('click',()=>{
+  // Composite: render one clean frame onto a fresh offscreen canvas, preserving full quality
+  const oc=document.createElement('canvas');
+  oc.width=W;oc.height=H;
+  const oc2=oc.getContext('2d');
+  oc2.fillStyle='#0d0a07';oc2.fillRect(0,0,W,H);
+  oc2.drawImage(cv,0,0);
+  const a=document.createElement('a');
+  a.download=`elmer-elsie-${Date.now()}.png`;
+  a.href=oc.toDataURL('image/png');
+  a.click();
+  emit('Canvas saved as PNG');
+});
 
 window.addEventListener('resize',()=>{
-  W=cv.width=window.innerWidth; H=cv.height=window.innerHeight;
-  compAR();
-  if(seeded){
-    updatePositionsFromNormalized();
-  }
+  W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;
+  compAR();if(seeded)normToAbs();
 });
 
-setup();
-loop();
+// ── LOOP ──────────────────────────────────────────────────────
+function loop(){
+  turtles.forEach(updateT);draw();if(fr%3===0)refreshUI();requestAnimationFrame(loop);
+}
+setup();loop();
 </script>
 </body>
 </html>
