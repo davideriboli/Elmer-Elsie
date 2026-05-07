@@ -74,20 +74,28 @@ hr{border:none;border-top:1px solid var(--border);margin:13px 0}
 #btn-clear,#btn-png{font-size:.74rem;padding:8px;color:#9a8050;letter-spacing:1.5px}
 input[type=range]{width:100%;accent-color:var(--amber);cursor:pointer}
 
-.tblock{margin-bottom:14px}
-.tname{font-family:var(--font);font-size:.87rem;color:var(--amber);letter-spacing:1px;margin-bottom:5px}
-.badge{
-  display:inline-block;font-family:var(--font);font-size:.67rem;padding:2px 7px;
-  border-radius:2px;border:1px solid currentColor;text-transform:uppercase;
-  letter-spacing:1px;margin-bottom:8px;transition:color .3s;
+#hud{
+  position:fixed;top:14px;right:14px;z-index:140;background:rgba(13,10,6,.82);
+  border:1px solid var(--border);border-radius:4px;padding:6px 8px;
+  backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:4px;
+  pointer-events:none;
 }
+.hud-leg{
+  display:flex;align-items:center;justify-content:flex-end;gap:4px;
+  font-family:var(--font);font-size:.5rem;color:var(--dim);text-transform:uppercase;
+  border-bottom:1px solid rgba(155,110,40,.2);padding-bottom:4px;margin-bottom:2px;
+}
+.hud-row{display:flex;align-items:center;gap:5px;font-family:var(--font);font-size:.6rem}
+.hud-name{width:32px;letter-spacing:1px;font-weight:bold}
+.hud-state{width:42px;text-align:left;text-transform:uppercase;font-size:.55rem}
+.hud-val{color:var(--dim);width:22px;text-align:right}
+
 .s-idle{color:#514839}.s-scanning{color:#7e8f5e}.s-seeking{color:#b89840}
 .s-hesitating{color:#d07828}.s-avoiding{color:#c04030}.s-frozen{color:#88b8d4}.s-resting{color:#c8a838}
-.nrow{display:flex;align-items:center;gap:8px;font-family:var(--font);font-size:.78rem;color:var(--text);margin-bottom:6px}
-.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:background .15s,box-shadow .15s}
-.dot.A{background:#3e2808}.dot.A.lit{background:#e09c2c;box-shadow:0 0 7px #e09c2c}
-.dot.B{background:#3e0e08}.dot.B.lit{background:#d83828;box-shadow:0 0 7px #d83828}
-.nval{color:var(--dim);min-width:32px;text-align:right;font-size:.78rem}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background .15s,box-shadow .15s}
+.dot.A{background:#3e2808}.dot.A.lit{background:#e09c2c;box-shadow:0 0 6px #e09c2c}
+.dot.B{background:#3e0e08}.dot.B.lit{background:#d83828;box-shadow:0 0 6px #d83828}
+
 #log{font-family:var(--font);font-size:.73rem;color:var(--dim);
      margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.9}
 .le{transition:opacity 2s}.le.old{opacity:.3}
@@ -104,14 +112,6 @@ input[type=range]{width:100%;accent-color:var(--amber);cursor:pointer}
 }
 #fab:hover,#fab:active{background:rgba(155,110,40,.36);border-color:var(--amber)}
 #fab.on{background:rgba(155,110,40,.32);border-color:var(--amber);color:#dcaa48}
-
-#ministat{position:fixed;top:14px;right:14px;z-index:140;display:flex;gap:7px}
-.mchip{
-  display:flex;align-items:center;gap:5px;background:rgba(13,10,6,.82);
-  border:1px solid var(--border);border-radius:4px;padding:5px 9px;backdrop-filter:blur(10px);
-}
-.mname{font-family:var(--font);font-size:.58rem;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
-.mdots{display:flex;gap:4px;align-items:center}
 </style>
 </head>
 <body>
@@ -147,42 +147,32 @@ input[type=range]{width:100%;accent-color:var(--amber);cursor:pointer}
     <hr>
     <span class="hint"><strong style="color:var(--text)">Touch</strong> — tap a turtle to inject a stimulus. Drag when frozen to relocate.</span>
 
-    <h2>Circuit State</h2>
-    <div class="tblock">
-      <div class="tname">Elmer</div>
-      <div class="badge s-idle" id="elmer-badge">idle</div><br>
-      <div class="nrow"><div class="dot A" id="elmer-nA"></div><span>Neuron A — Phototropic</span><span class="nval" id="elmer-vA">0.00</span></div>
-      <div class="nrow"><div class="dot B" id="elmer-nB"></div><span>Neuron B — Touch</span><span class="nval" id="elmer-vB">0.00</span></div>
-    </div>
-    <div class="tblock">
-      <div class="tname">Elsie</div>
-      <div class="badge s-idle" id="elsie-badge">idle</div><br>
-      <div class="nrow"><div class="dot A" id="elsie-nA"></div><span>Neuron A — Phototropic</span><span class="nval" id="elsie-vA">0.00</span></div>
-      <div class="nrow"><div class="dot B" id="elsie-nB"></div><span>Neuron B — Touch</span><span class="nval" id="elsie-vB">0.00</span></div>
-    </div>
     <div id="log"></div>
 
     <h2>About</h2>
     <div id="about-txt">
-      In 1948, neurologist <strong>William Grey Walter</strong> built two small robots at the Burden Neurological Institute in Bristol. Housed in transparent shells, <strong>Elmer</strong> and <strong>Elsie</strong> each ran on just <em>two vacuum tubes</em> — one for light-seeking, one for obstacle avoidance. Without any programming in the modern sense, they exhibited phototaxis, wandering, and spontaneous rest near their light source. In one experiment, a lamp was placed before a mirror: approaching it, the robot detected its own reflected glow and entered a feedback loop of flickering and trembling. Walter wrote that, observed in an animal, this behaviour might be taken as evidence of <em>a rudimentary form of self-awareness</em>.
+      More infos and code:<br><br>
+      <a href="https://github.com/davideriboli/Elmer-Elsie" target="_blank" style="color:var(--amber);text-decoration:none;word-break:break-all">https://github.com/davideriboli/Elmer-Elsie</a>
     </div>
   </div>
 </div>
 
-<div id="ministat">
-  <div class="mchip">
-    <span class="mname">E1</span>
-    <div class="mdots">
-      <div class="dot A" id="m-elmer-nA"></div>
-      <div class="dot B" id="m-elmer-nB"></div>
-    </div>
+<div id="hud">
+  <div class="hud-leg">
+    <div class="dot A"></div><span>Photo</span>
+    <div class="dot B" style="margin-left:4px"></div><span>Touch</span>
   </div>
-  <div class="mchip">
-    <span class="mname">E2</span>
-    <div class="mdots">
-      <div class="dot A" id="m-elsie-nA"></div>
-      <div class="dot B" id="m-elsie-nB"></div>
-    </div>
+  <div class="hud-row">
+    <span class="hud-name" style="color:var(--amber)">ELMER</span>
+    <span class="hud-state s-idle" id="hud-elmer-state">IDLE</span>
+    <div class="dot A" id="hud-elmer-nA"></div><span class="hud-val" id="hud-elmer-vA">0.00</span>
+    <div class="dot B" id="hud-elmer-nB"></div><span class="hud-val" id="hud-elmer-vB">0.00</span>
+  </div>
+  <div class="hud-row">
+    <span class="hud-name" style="color:#52a27d">ELSIE</span>
+    <span class="hud-state s-idle" id="hud-elsie-state">IDLE</span>
+    <div class="dot A" id="hud-elsie-nA"></div><span class="hud-val" id="hud-elsie-vA">0.00</span>
+    <div class="dot B" id="hud-elsie-nB"></div><span class="hud-val" id="hud-elsie-vB">0.00</span>
   </div>
 </div>
 
@@ -438,7 +428,7 @@ function drawLCore(){
   cx.textAlign='center';cx.fillText('light source',light.x,light.y+20);
 }
 
-// OTTIMIZZAZIONE APPLICATA: Path Batching
+// FIXED: Path Batching Algorithm
 function drawTrail(t){
   const len = t.trail.length;
   if(len < 2) return;
@@ -448,7 +438,6 @@ function drawTrail(t){
     let end = start + 1;
     const ref = t.trail[start];
 
-    // Raggruppa fino a 150 segmenti contigui con la medesima componente colore (r)
     while(end < len && (end - start) < 150 && t.trail[end].r === ref.r) {
       end++;
     }
@@ -463,9 +452,12 @@ function drawTrail(t){
     cx.strokeStyle = `rgba(${ref.r},${ref.g},${ref.b},${p * p * 0.2 + p * 0.08})`;
     cx.lineWidth = p * 2.5 + 0.1;
     cx.lineCap = 'round';
+    cx.lineJoin = 'round';
     cx.stroke();
 
-    start = end - 1; // Sovrappone il vertice di chiusura per continuità visiva
+    // Fix del loop infinito: assicura un incremento minimo pari a 1 per superare il vertice 
+    // di cambio stato, pur mantenendo la sovrapposizione visiva nei chunk continui
+    start = Math.max(start + 1, end - 1);
   }
 }
 
@@ -590,15 +582,13 @@ function drawHandle(o){
 function refreshUI(){
   for(const t of turtles){
     const id=t.name.toLowerCase();
-    const bd=document.getElementById(`${id}-badge`);
-    bd.className=`badge s-${t.state}`;bd.textContent=t.state;
-    document.getElementById(`${id}-vA`).textContent=t.nA.toFixed(2);
-    document.getElementById(`${id}-vB`).textContent=t.nB.toFixed(2);
+    const st=document.getElementById(`hud-${id}-state`);
+    st.className=`hud-state s-${t.state}`;st.textContent=t.state;
+    document.getElementById(`hud-${id}-vA`).textContent=t.nA.toFixed(2);
+    document.getElementById(`hud-${id}-vB`).textContent=t.nB.toFixed(2);
     ['nA','nB'].forEach(n=>{
       const v=n==='nA'?t.nA:t.nB,k=n==='nA'?'A':'B';
-      const cls=`dot ${k}${v>.13?' lit':''}`;
-      document.getElementById(`${id}-${n}`).className=cls;
-      document.getElementById(`m-${id}-${n}`).className=cls;
+      document.getElementById(`hud-${id}-${n}`).className=`dot ${k}${v>.13?' lit':''}`;
     });
   }
 }
@@ -746,7 +736,6 @@ document.getElementById('btn-clear').addEventListener('click',()=>{
 });
 
 document.getElementById('btn-png').addEventListener('click',()=>{
-  // Composite: render one clean frame onto a fresh offscreen canvas, preserving full quality
   const oc=document.createElement('canvas');
   oc.width=W;oc.height=H;
   const oc2=oc.getContext('2d');
